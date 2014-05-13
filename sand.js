@@ -2,12 +2,13 @@ var canvas;
 var context;
 
 var sand;
-
+var chance=0.5;
+var speed=50;
 function heapGrain(i) {
     grain = sand.falling[i];
-    grain.falling=false;
-    sand.heap[[grain.x,grain.y]] = grain;
     sand.falling.splice(i,1);
+    grain.falling=false;
+    sand.heap[grain.x]--;
 }
 
 function updateSand() {
@@ -20,18 +21,18 @@ function updateSand() {
 	}
 	
 	// Not at the bottom yet. Check one pixel below for sand.
-	var below = sand.heap[[grain.x,grain.y+1]];
+	var below = (sand.heap[grain.x] == grain.y+1);
 	if (below) {
 	    //check left and right too
-	    var left = sand.heap[[grain.x-1,grain.y+1]];
-	    var right = sand.heap[[grain.x+1,grain.y+1]];
+	    var left = (sand.heap[grain.x-1] > grain.y+1);
+	    var right = (sand.heap[grain.x+1] > grain.y+1);
 
-	    if (!left && !right) {
-		var lt=0.495;var rt=0.99;
+	    if (left && right) {
+		var lt=chance;var rt=2*chance;
 	    } else if (left) {
-		var lt=0;var rt=0.90;
+		var lt=2*chance;var rt=0;
 	    } else if (right) {
-		var lt=0.99;var rt=0.0;
+		var lt=0;var rt=2*chance;
 	    } else {
 		var lt=0;var rt=0;
 	    }
@@ -58,9 +59,12 @@ function initSand() {
     sand =
 	{source: canvas.width()/2,
 	 sourceActive: false,
-	 grains: [],
 	 falling: [],
-	 heap: {}};
+	 heap: []};
+
+    for (var i=0;i<canvas.width();i++) {
+	sand.heap[i] = canvas.height();
+    }
 
     fallTimer=window.setInterval(updateSand,10);
 }
@@ -70,7 +74,6 @@ function dropGrain() {
     grain = {x: sand.source,
 	     y: 10,
 	     falling: true};
-    sand.grains.push(grain);
     sand.falling.push(grain);
 }
 
@@ -82,7 +85,7 @@ function toggleSand() {
     }
     sand.sourceActive = !sand.sourceActive;
     if (sand.sourceActive) {
-	dropEvent=window.setInterval(dropGrain,50);
+	dropEvent=window.setInterval(dropGrain,speed);
     }
 }
 
@@ -101,16 +104,31 @@ function drawSource() {
 
 function drawSand() {
     context.fillStyle="#000";
-    for(var i=0;i<sand.grains.length;i++){
-	var grain = sand.grains[i];
+    context.beginPath();
+    for(var i=0;i<sand.falling.length;i++){
+	var grain = sand.falling[i];
 	context.fillRect(grain.x,grain.y,1,1);
     }
+
+
+
+    for (var x=0;x<sand.heap.length;x++){
+	for(var y=sand.heap[x];y<canvas.height();y++) {
+	    context.fillRect(x,y,1,1);
+	}
+    }
+    context.stroke();
+
+	    
 }
 
 function clearCanvas() {
     context.fillStyle = "#eef";
     context.fillRect(0,0,canvas.width(),canvas.height());
 }
+
+
+    
 
 function draw(ts) {
     clearCanvas();
