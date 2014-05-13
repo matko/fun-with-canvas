@@ -113,9 +113,7 @@ function drawSand() {
 
 
     for (var x=0;x<sand.heap.length;x++){
-	for(var y=sand.heap[x];y<canvas.height();y++) {
-	    context.fillRect(x,y,1,1);
-	}
+	context.fillRect(x,sand.heap[x],1,canvas.height()-sand.heap[x]);
     }
     context.stroke();
 
